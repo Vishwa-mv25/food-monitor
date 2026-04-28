@@ -1,13 +1,30 @@
-```html
+
 <!DOCTYPE html>
 <html>
 <head>
 <title>Live Food Monitor</title>
 <style>
-body{font-family:Arial;text-align:center;background:#f2f2f2;padding:40px}
-.box{background:white;padding:30px;border-radius:15px;width:420px;margin:auto}
+body{
+font-family:Arial;
+text-align:center;
+background:#f2f2f2;
+padding:40px;
+margin:0;
+}
+.box{
+background:white;
+padding:30px;
+border-radius:15px;
+width:420px;
+max-width:90%;
+margin:auto;
+box-shadow:0 0 12px rgba(0,0,0,0.2);
+}
+h1{color:green;}
+h2{font-weight:normal;}
 </style>
 </head>
+
 <body>
 
 <div class="box">
@@ -18,31 +35,35 @@ body{font-family:Arial;text-align:center;background:#f2f2f2;padding:40px}
 </div>
 
 <script>
-const channelID = "YOUR_CHANNEL_ID";
-const readAPI = "YOUR_READ_API_KEY";
 
 async function loadData(){
-let url = `https://api.thingspeak.com/channels/${channelID}/feeds/last.json?api_key=${readAPI}`;
-let res = await fetch(url);
-let data = await res.json();
 
-let gas = data.field1;
-let moist = data.field2;
+let url = "https://api.thingspeak.com/channels/3361476/feeds/last.json?api_key=W23Y9US9AT7U9T5S";
 
-document.getElementById("gas").innerText = "Gas: " + gas;
+let response = await fetch(url);
+let data = await response.json();
+
+let gas = Number(data.field1);
+let moist = Number(data.field2);
+
+document.getElementById("gas").innerText = "Gas Value: " + gas;
 document.getElementById("moist").innerText = "Moisture: " + moist;
 
-let status="FRESH";
+let status = "FRESH";
 
-if(gas > 240 || moist < 300) status="ROTTEN";
-else if(gas > 180) status="BAD";
-else if(gas > 120) status="OK";
+if(gas > 240 || moist < 300)
+status = "ROTTEN";
+else if(gas > 180)
+status = "BAD";
+else if(gas > 120)
+status = "OK";
 
-document.getElementById("status").innerText = "Status: " + status;
+document.getElementById("status").innerText = "Food Status: " + status;
 }
 
 loadData();
 setInterval(loadData,15000);
+
 </script>
 
 </body>
