@@ -1,49 +1,149 @@
-
 <!DOCTYPE html>
 <html>
 <head>
-<title>Food Monitor</title>
+<title>Food Spoilage Detection System</title>
+
 <style>
 body{
-font-family:Arial;
-text-align:center;
-background:#f2f2f2;
-padding:40px;
-margin:0;
+    font-family: Arial;
+    background: #eef2f3;
+    margin:0;
 }
-.box{
-background:white;
-padding:30px;
-border-radius:15px;
-width:420px;
-max-width:90%;
-margin:auto;
-box-shadow:0 0 12px rgba(0,0,0,0.2);
+
+/* Header */
+.header{
+    background:#2e7d32;
+    color:white;
+    text-align:center;
+    padding:20px;
+    font-size:26px;
+    font-weight:bold;
 }
-button{
-padding:12px 20px;
-font-size:18px;
-border:none;
-background:green;
-color:white;
-border-radius:10px;
-cursor:pointer;
-margin-top:15px;
+
+/* Top Menu */
+.menu{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:15px;
+}
+.menu button{
+    padding:10px 15px;
+    border:none;
+    border-radius:20px;
+    background:#2e7d32;
+    color:white;
+    cursor:pointer;
+}
+
+/* Cards */
+.container{
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+    padding:20px;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.title{
+    font-size:14px;
+    color:gray;
+}
+
+.value{
+    font-size:28px;
+    font-weight:bold;
+}
+
+/* Progress bar */
+.bar{
+    height:8px;
+    background:#ddd;
+    border-radius:10px;
+    margin-top:8px;
+}
+.fill{
+    height:8px;
+    background:#2e7d32;
+    border-radius:10px;
+}
+
+/* Bottom */
+.big{
+    font-size:32px;
+    font-weight:bold;
+    color:#2e7d32;
+}
+
+.center{
+    text-align:center;
+    margin:20px;
+}
+
+button.refresh{
+    padding:12px 25px;
+    font-size:16px;
+    border:none;
+    background:#2e7d32;
+    color:white;
+    border-radius:10px;
+    cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div class="box">
-<h1>Food Spoilage Detection</h1>
+<!-- HEADER -->
+<div class="header">
+Food Spoilage Detection System
+</div>
 
-<h2 id="gas">Gas: Loading...</h2>
-<h2 id="moist">Moisture: Loading...</h2>
-<h2 id="status">Status: Loading...</h2>
+<!-- MENU -->
+<div class="menu">
+<button>REAL SENSOR</button>
+<button>DRY</button>
+<button>HEALTHY</button>
+<button>LOW</button>
+<button>HIGH</button>
+</div>
 
-<button onclick="loadData()">Refresh</button>
+<!-- DASHBOARD -->
+<div class="container">
 
+<div class="card">
+<div class="title">Gas Level</div>
+<div id="gas" class="value">--</div>
+<div class="bar"><div id="gasBar" class="fill" style="width:0%"></div></div>
+</div>
+
+<div class="card">
+<div class="title">Moisture</div>
+<div id="moist" class="value">--</div>
+<div class="bar"><div id="moistBar" class="fill" style="width:0%"></div></div>
+</div>
+
+<div class="card">
+<div class="title">Food Status</div>
+<div id="status" class="big">--</div>
+</div>
+
+<div class="card">
+<div class="title">Health Score</div>
+<div id="score" class="value">--</div>
+<div class="bar"><div id="scoreBar" class="fill"></div></div>
+</div>
+
+</div>
+
+<div class="center">
+<button class="refresh" onclick="loadData()">Refresh</button>
 </div>
 
 <script>
@@ -58,8 +158,8 @@ let data = await response.json();
 let gas = Number(data.field1);
 let moist = Number(data.field2);
 
-document.getElementById("gas").innerText="Gas Value: "+gas;
-document.getElementById("moist").innerText="Moisture: "+moist;
+document.getElementById("gas").innerText = gas;
+document.getElementById("moist").innerText = moist;
 
 let status="FRESH";
 
@@ -70,7 +170,17 @@ status="BAD";
 else if(gas>120)
 status="OK";
 
-document.getElementById("status").innerText="Food Status: "+status;
+document.getElementById("status").innerText = status;
+
+let score = 100 - (gas/3) - (300-moist)/5;
+if(score<0) score=0;
+if(score>100) score=100;
+
+document.getElementById("score").innerText = Math.round(score)+"/100";
+
+document.getElementById("gasBar").style.width = (gas/3)+"%";
+document.getElementById("moistBar").style.width = (moist/10)+"%";
+document.getElementById("scoreBar").style.width = score+"%";
 }
 
 loadData();
