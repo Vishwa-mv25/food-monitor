@@ -20,7 +20,7 @@ body{
     font-weight:bold;
 }
 
-/* Top Menu */
+/* Menu */
 .menu{
     display:flex;
     justify-content:center;
@@ -33,7 +33,6 @@ body{
     border-radius:20px;
     background:#2e7d32;
     color:white;
-    cursor:pointer;
 }
 
 /* Cards */
@@ -61,7 +60,7 @@ body{
     font-weight:bold;
 }
 
-/* Progress bar */
+/* Progress bars */
 .bar{
     height:8px;
     background:#ddd;
@@ -74,13 +73,13 @@ body{
     border-radius:10px;
 }
 
-/* Bottom */
+/* Status */
 .big{
     font-size:32px;
     font-weight:bold;
-    color:#2e7d32;
 }
 
+/* Button */
 .center{
     text-align:center;
     margin:20px;
@@ -100,12 +99,10 @@ button.refresh{
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
 Food Spoilage Detection System
 </div>
 
-<!-- MENU -->
 <div class="menu">
 <button>REAL SENSOR</button>
 <button>DRY</button>
@@ -114,7 +111,6 @@ Food Spoilage Detection System
 <button>HIGH</button>
 </div>
 
-<!-- DASHBOARD -->
 <div class="container">
 
 <div class="card">
@@ -158,31 +154,47 @@ let data = await response.json();
 let gas = Number(data.field1);
 let moist = Number(data.field2);
 
+/* Show values */
 document.getElementById("gas").innerText = gas;
 document.getElementById("moist").innerText = moist;
 
-let status="FRESH";
+/* ✅ Corrected Status Logic */
+let statusText = "FRESH";
 
-if(gas>240 || moist<300)
-status="ROTTEN";
-else if(gas>180)
-status="BAD";
-else if(gas>120)
-status="OK";
+if (gas > 240 && moist < 300)
+    statusText = "ROTTEN";
+else if (gas > 180 || moist < 350)
+    statusText = "BAD";
+else if (gas > 120)
+    statusText = "OK";
+else
+    statusText = "FRESH";
 
-document.getElementById("status").innerText = status;
+/* Display Status */
+let statusEl = document.getElementById("status");
+statusEl.innerText = statusText;
 
+/* Color change */
+if(statusText=="FRESH") statusEl.style.color="green";
+else if(statusText=="OK") statusEl.style.color="orange";
+else if(statusText=="BAD") statusEl.style.color="orangered";
+else statusEl.style.color="red";
+
+/* Health Score */
 let score = 100 - (gas/3) - (300-moist)/5;
 if(score<0) score=0;
 if(score>100) score=100;
 
 document.getElementById("score").innerText = Math.round(score)+"/100";
 
+/* Progress bars */
 document.getElementById("gasBar").style.width = (gas/3)+"%";
 document.getElementById("moistBar").style.width = (moist/10)+"%";
 document.getElementById("scoreBar").style.width = score+"%";
+
 }
 
+/* Auto load */
 loadData();
 
 </script>
