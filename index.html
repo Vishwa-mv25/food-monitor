@@ -1,203 +1,843 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Food Spoilage Detection System</title>
-
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body{
-    font-family: Arial;
-    background: #eef2f3;
-    margin:0;
-}
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Header */
-.header{
-    background:#2e7d32;
-    color:white;
-    text-align:center;
-    padding:20px;
-    font-size:26px;
-    font-weight:bold;
-}
+  :root {
+    --bg: #0a0f0d;
+    --bg2: #0f1612;
+    --bg3: #141d18;
+    --surface: #1a2420;
+    --surface2: #1f2d28;
+    --border: rgba(74, 222, 128, 0.08);
+    --border2: rgba(74, 222, 128, 0.18);
+    --green: #4ade80;
+    --green-dim: #22c55e;
+    --green-glow: rgba(74, 222, 128, 0.12);
+    --orange: #fb923c;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --text: #e8f5e9;
+    --text2: #7a9e87;
+    --text3: #4a6e55;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Sora', sans-serif;
+  }
 
-/* Menu */
-.menu{
-    display:flex;
-    justify-content:center;
-    gap:10px;
-    padding:15px;
-}
-.menu button{
-    padding:10px 15px;
-    border:none;
-    border-radius:20px;
-    background:#2e7d32;
-    color:white;
-}
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 
-/* Cards */
-.container{
-    display:grid;
-    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-    gap:20px;
-    padding:20px;
-}
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
 
-.card{
-    background:white;
-    padding:20px;
-    border-radius:15px;
-    box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
+  /* Corner glow */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(74,222,128,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
 
-.title{
-    font-size:14px;
-    color:gray;
-}
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+  }
 
-.value{
-    font-size:28px;
-    font-weight:bold;
-}
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 24px;
+    border-bottom: 1px solid var(--border);
+  }
 
-/* Progress bars */
-.bar{
-    height:8px;
-    background:#ddd;
-    border-radius:10px;
-    margin-top:8px;
-}
-.fill{
-    height:8px;
-    background:#2e7d32;
-    border-radius:10px;
-}
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-/* Status */
-.big{
-    font-size:32px;
-    font-weight:bold;
-}
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+  }
 
-/* Button */
-.center{
-    text-align:center;
-    margin:20px;
-}
+  .logo-icon svg { width: 20px; height: 20px; }
 
-button.refresh{
-    padding:12px 25px;
-    font-size:16px;
-    border:none;
-    background:#2e7d32;
-    color:white;
-    border-radius:10px;
-    cursor:pointer;
-}
+  .logo-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .logo-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: var(--mono);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--green);
+    background: rgba(74,222,128,0.07);
+    border: 1px solid rgba(74,222,128,0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .ts {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+  }
+
+  /* ── Mode Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    padding: 20px 0 24px;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .tab:hover, .tab.active {
+    border-color: var(--border2);
+    color: var(--green);
+    background: var(--green-glow);
+  }
+
+  /* ── Big Status Banner ── */
+  .status-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.5s;
+  }
+
+  .status-banner::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--status-color, var(--green));
+    border-radius: 16px 0 0 16px;
+  }
+
+  .status-left {}
+
+  .status-label {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .status-value {
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--status-color, var(--green));
+    letter-spacing: -0.02em;
+    transition: color 0.5s;
+    text-shadow: 0 0 40px var(--status-color, var(--green));
+  }
+
+  .status-desc {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 8px;
+  }
+
+  .status-right {
+    text-align: right;
+  }
+
+  .health-ring {
+    width: 120px;
+    height: 120px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .health-ring svg {
+    position: absolute;
+    inset: 0;
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg { fill: none; stroke: var(--surface2); stroke-width: 8; }
+
+  .ring-fill {
+    fill: none;
+    stroke: var(--status-color, var(--green));
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 339;
+    stroke-dashoffset: 339;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1), stroke 0.5s;
+    filter: drop-shadow(0 0 6px var(--status-color, var(--green)));
+  }
+
+  .ring-label {
+    text-align: center;
+    z-index: 1;
+  }
+
+  .ring-score {
+    font-size: 26px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .ring-sub {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.05em;
+    font-family: var(--mono);
+  }
+
+  /* ── Metric Cards ── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .card:hover { border-color: var(--border2); }
+
+  .card-label {
+    font-size: 10px;
+    font-family: var(--mono);
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-label-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--text3);
+  }
+
+  .card-value {
+    font-size: 38px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--text);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .card-unit {
+    font-size: 14px;
+    color: var(--text3);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  .card-trend {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 8px;
+    font-family: var(--mono);
+  }
+
+  /* Gauge bar */
+  .gauge-track {
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 10px;
+    margin-top: 18px;
+    overflow: hidden;
+  }
+
+  .gauge-fill {
+    height: 3px;
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    background: linear-gradient(90deg, var(--green-dim), var(--green));
+  }
+
+  .gauge-markers {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+  }
+
+  .gauge-marker {
+    font-size: 9px;
+    font-family: var(--mono);
+    color: var(--text3);
+  }
+
+  /* ── Log / History ── */
+  .log-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .log-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .log-title {
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .log-count {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+  }
+
+  .log-list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .log-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 24px;
+    border-bottom: 1px solid rgba(74,222,128,0.04);
+    font-family: var(--mono);
+    font-size: 12px;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .log-time { color: var(--text3); min-width: 60px; }
+  .log-gas { color: var(--text2); min-width: 80px; }
+  .log-moist { color: var(--text2); min-width: 90px; }
+  .log-status { font-weight: 500; }
+
+  .log-list::-webkit-scrollbar { width: 4px; }
+  .log-list::-webkit-scrollbar-track { background: transparent; }
+  .log-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── Refresh Button ── */
+  .bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding-top: 8px;
+  }
+
+  .btn-refresh {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 28px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-refresh::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--green-glow);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .btn-refresh:hover::before { opacity: 1; }
+  .btn-refresh:hover { border-color: rgba(74,222,128,0.4); }
+  .btn-refresh:active { transform: scale(0.98); }
+
+  .btn-icon {
+    display: inline-block;
+    transition: transform 0.6s;
+  }
+
+  .btn-refresh.loading .btn-icon {
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .last-update {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+  }
+
+  /* ── Threshold Alert ── */
+  .alert {
+    display: none;
+    background: rgba(248, 113, 113, 0.08);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: #fca5a5;
+    margin-bottom: 20px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alert.show { display: flex; }
+
+  /* Scrollbar for body */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 </style>
 </head>
-
 <body>
+<div class="wrapper">
 
-<div class="header">
-Food Spoilage Detection System
-</div>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/>
+          <path d="M8 12s1.5 2 4 2 4-2 4-2"/>
+          <line x1="9" y1="9" x2="9.01" y2="9"/>
+          <line x1="15" y1="9" x2="15.01" y2="9"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <span class="logo-title">FreshSense</span>
+        <span class="logo-sub">Spoilage Detection v2</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><span class="live-dot"></span>Live</div>
+      <div class="ts" id="clock">--:--:--</div>
+    </div>
+  </header>
 
-<div class="menu">
-<button>REAL SENSOR</button>
-<button>DRY</button>
-<button>HEALTHY</button>
-<button>LOW</button>
-<button>HIGH</button>
-</div>
+  <!-- Mode Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="setMode('live')">Real Sensor</button>
+    <button class="tab" onclick="setMode('dry')">Dry Run</button>
+    <button class="tab" onclick="setMode('fresh')">Healthy</button>
+    <button class="tab" onclick="setMode('low')">Low Gas</button>
+    <button class="tab" onclick="setMode('high')">High Gas</button>
+  </div>
 
-<div class="container">
+  <!-- Alert Banner -->
+  <div class="alert" id="alertBanner">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span id="alertText">High spoilage indicators detected. Consider discarding the food item.</span>
+  </div>
 
-<div class="card">
-<div class="title">Gas Level</div>
-<div id="gas" class="value">--</div>
-<div class="bar"><div id="gasBar" class="fill" style="width:0%"></div></div>
-</div>
+  <!-- Status Banner -->
+  <div class="status-banner" id="statusBanner">
+    <div class="status-left">
+      <div class="status-label">Food Status</div>
+      <div class="status-value" id="statusVal">--</div>
+      <div class="status-desc" id="statusDesc">Awaiting sensor data…</div>
+    </div>
+    <div class="status-right">
+      <div class="health-ring" id="healthRing">
+        <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+          <circle class="ring-bg" cx="60" cy="60" r="54"/>
+          <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="54"/>
+        </svg>
+        <div class="ring-label">
+          <div class="ring-score" id="ringScore">--</div>
+          <div class="ring-sub">HEALTH</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<div class="card">
-<div class="title">Moisture</div>
-<div id="moist" class="value">--</div>
-<div class="bar"><div id="moistBar" class="fill" style="width:0%"></div></div>
-</div>
+  <!-- Metric Cards -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-label"><span class="card-label-dot"></span>Gas Level</div>
+      <div>
+        <span class="card-value" id="gasVal">--</span>
+        <span class="card-unit">ppm</span>
+      </div>
+      <div class="card-trend" id="gasTrend">Threshold: &gt;240 = Rotten</div>
+      <div class="gauge-track"><div class="gauge-fill" id="gasBar"></div></div>
+      <div class="gauge-markers">
+        <span class="gauge-marker">0</span>
+        <span class="gauge-marker">120</span>
+        <span class="gauge-marker">180</span>
+        <span class="gauge-marker">240</span>
+        <span class="gauge-marker">300</span>
+      </div>
+    </div>
 
-<div class="card">
-<div class="title">Food Status</div>
-<div id="status" class="big">--</div>
-</div>
+    <div class="card">
+      <div class="card-label"><span class="card-label-dot"></span>Moisture</div>
+      <div>
+        <span class="card-value" id="moistVal">--</span>
+        <span class="card-unit">units</span>
+      </div>
+      <div class="card-trend" id="moistTrend">Threshold: &lt;300 = Rotten</div>
+      <div class="gauge-track"><div class="gauge-fill" id="moistBar"></div></div>
+      <div class="gauge-markers">
+        <span class="gauge-marker">0</span>
+        <span class="gauge-marker">250</span>
+        <span class="gauge-marker">350</span>
+        <span class="gauge-marker">500</span>
+        <span class="gauge-marker">1000</span>
+      </div>
+    </div>
 
-<div class="card">
-<div class="title">Health Score</div>
-<div id="score" class="value">--</div>
-<div class="bar"><div id="scoreBar" class="fill"></div></div>
-</div>
+    <div class="card">
+      <div class="card-label"><span class="card-label-dot"></span>Health Score</div>
+      <div>
+        <span class="card-value" id="scoreVal">--</span>
+        <span class="card-unit">/100</span>
+      </div>
+      <div class="card-trend" id="scoreTrend">Combined freshness index</div>
+      <div class="gauge-track"><div class="gauge-fill" id="scoreBar"></div></div>
+      <div class="gauge-markers">
+        <span class="gauge-marker">0</span>
+        <span class="gauge-marker">25</span>
+        <span class="gauge-marker">50</span>
+        <span class="gauge-marker">75</span>
+        <span class="gauge-marker">100</span>
+      </div>
+    </div>
+  </div>
 
-</div>
+  <!-- Log -->
+  <div class="log-section">
+    <div class="log-header">
+      <span class="log-title">Reading History</span>
+      <span class="log-count" id="logCount">0 entries</span>
+    </div>
+    <div class="log-list" id="logList">
+      <div class="log-row" style="color: var(--text3)">
+        <span class="log-time">--:--</span>
+        <span style="font-family: var(--mono); font-size:12px;">Waiting for first reading…</span>
+      </div>
+    </div>
+  </div>
 
-<div class="center">
-<button class="refresh" onclick="loadData()">Refresh</button>
+  <!-- Bottom Bar -->
+  <div class="bottom-bar">
+    <button class="btn-refresh" id="refreshBtn" onclick="triggerLoad()">
+      <span class="btn-icon">↻</span>
+      Refresh Data
+    </button>
+    <span class="last-update" id="lastUpdate">Never updated</span>
+  </div>
+
 </div>
 
 <script>
+let mode = 'live';
+let logs = [];
 
-async function loadData(){
+const statusColors = {
+  FRESH: '#4ade80',
+  OK: '#fbbf24',
+  BAD: '#fb923c',
+  ROTTEN: '#f87171'
+};
 
-let url="https://api.thingspeak.com/channels/3361476/feeds/last.json?api_key=W23Y9US9AT7U9T5S";
+const statusDescs = {
+  FRESH: 'Food is in excellent condition — safe to consume.',
+  OK: 'Food is acceptable — mild indicators present.',
+  BAD: 'Food shows signs of spoilage — consume with caution.',
+  ROTTEN: 'Food is spoiled — not safe for consumption.'
+};
 
-let response = await fetch(url);
-let data = await response.json();
-
-let gas = Number(data.field1);
-let moist = Number(data.field2);
-
-/* Show values */
-document.getElementById("gas").innerText = gas;
-document.getElementById("moist").innerText = moist;
-
-/* ✅ Corrected Status Logic */
-let statusText = "FRESH";
-
-if (gas > 240 && moist < 300)
-    statusText = "ROTTEN";
-else if (gas > 180 || moist < 350)
-    statusText = "BAD";
-else if (gas > 120)
-    statusText = "OK";
-else
-    statusText = "FRESH";
-
-/* Display Status */
-let statusEl = document.getElementById("status");
-statusEl.innerText = statusText;
-
-/* Color change */
-if(statusText=="FRESH") statusEl.style.color="green";
-else if(statusText=="OK") statusEl.style.color="orange";
-else if(statusText=="BAD") statusEl.style.color="orangered";
-else statusEl.style.color="red";
-
-/* Health Score */
-let score = 100 - (gas/3) - (300-moist)/5;
-if(score<0) score=0;
-if(score>100) score=100;
-
-document.getElementById("score").innerText = Math.round(score)+"/100";
-
-/* Progress bars */
-document.getElementById("gasBar").style.width = (gas/3)+"%";
-document.getElementById("moistBar").style.width = (moist/10)+"%";
-document.getElementById("scoreBar").style.width = score+"%";
-
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['live','dry','fresh','low','high'][i] === m);
+  });
+  triggerLoad();
 }
 
-/* Auto load */
-loadData();
+async function loadData() {
+  let gas, moist;
 
+  if (mode === 'live') {
+    const res = await fetch('https://api.thingspeak.com/channels/3361476/feeds/last.json?api_key=W23Y9US9AT7U9T5S');
+    const data = await res.json();
+    gas = Number(data.field1);
+    moist = Number(data.field2);
+  } else {
+    const presets = {
+      dry:   { gas: 0, moist: 0 },
+      fresh: { gas: 80, moist: 600 },
+      low:   { gas: 50, moist: 800 },
+      high:  { gas: 260, moist: 200 }
+    };
+    const p = presets[mode];
+    gas = p.gas;
+    moist = p.moist;
+  }
+
+  return { gas, moist };
+}
+
+async function triggerLoad() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('loading');
+
+  let gas, moist;
+  try {
+    const result = await loadData();
+    gas = result.gas;
+    moist = result.moist;
+  } catch(e) {
+    document.getElementById('statusVal').textContent = 'ERROR';
+    document.getElementById('statusDesc').textContent = 'Could not reach ThingSpeak API. Check your connection or API key.';
+    document.getElementById('lastUpdate').textContent = 'Fetch failed';
+    btn.classList.remove('loading');
+    return;
+  }
+
+  // Status logic
+  let status = 'FRESH';
+  if (gas > 240 && moist < 300) status = 'ROTTEN';
+  else if (gas > 180 || moist < 350) status = 'BAD';
+  else if (gas > 120) status = 'OK';
+
+  // Score
+  let score = 100 - (gas / 3) - (300 - moist) / 5;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+
+  const color = statusColors[status];
+
+  // Update CSS var for color
+  document.getElementById('statusBanner').style.setProperty('--status-color', color);
+  document.getElementById('statusBanner').style.borderColor = color + '30';
+
+  // Status values
+  document.getElementById('statusVal').textContent = status;
+  document.getElementById('statusVal').style.color = color;
+  document.getElementById('statusDesc').textContent = statusDescs[status];
+
+  // Metric values
+  document.getElementById('gasVal').textContent = gas;
+  document.getElementById('moistVal').textContent = moist;
+  document.getElementById('scoreVal').textContent = score;
+
+  // Gauge bars
+  const gasBarPct = Math.min(100, (gas / 300) * 100);
+  const moistBarPct = Math.min(100, (moist / 1000) * 100);
+
+  document.getElementById('gasBar').style.width = gasBarPct + '%';
+  document.getElementById('gasBar').style.background = gas > 240 ? 'linear-gradient(90deg, #f87171, #fca5a5)' :
+    gas > 180 ? 'linear-gradient(90deg, #fb923c, #fbbf24)' :
+    'linear-gradient(90deg, #22c55e, #4ade80)';
+
+  document.getElementById('moistBar').style.width = moistBarPct + '%';
+  document.getElementById('moistBar').style.background = moist < 300 ? 'linear-gradient(90deg, #f87171, #fca5a5)' :
+    moist < 350 ? 'linear-gradient(90deg, #fb923c, #fbbf24)' :
+    'linear-gradient(90deg, #22c55e, #4ade80)';
+
+  document.getElementById('scoreBar').style.width = score + '%';
+  document.getElementById('scoreBar').style.background = score > 70 ?
+    'linear-gradient(90deg, #22c55e, #4ade80)' :
+    score > 40 ? 'linear-gradient(90deg, #fb923c, #fbbf24)' :
+    'linear-gradient(90deg, #f87171, #fca5a5)';
+
+  // Ring
+  const circumference = 339;
+  const offset = circumference - (score / 100) * circumference;
+  const ring = document.getElementById('ringFill');
+  ring.style.strokeDashoffset = offset;
+  ring.style.stroke = color;
+  document.getElementById('ringScore').textContent = score;
+
+  // Alert
+  const alertBanner = document.getElementById('alertBanner');
+  if (status === 'ROTTEN' || status === 'BAD') {
+    alertBanner.classList.add('show');
+    document.getElementById('alertText').textContent = status === 'ROTTEN'
+      ? '⚠ Critical: Food is spoiled — not safe for consumption. Dispose immediately.'
+      : '⚠ Warning: Spoilage indicators detected. Inspect before consuming.';
+  } else {
+    alertBanner.classList.remove('show');
+  }
+
+  // Trend labels
+  document.getElementById('gasTrend').textContent = gas > 240 ? '▲ Critical level' :
+    gas > 180 ? '▲ Elevated' : gas > 120 ? '→ Moderate' : '✓ Normal';
+  document.getElementById('moistTrend').textContent = moist < 300 ? '▼ Critically dry' :
+    moist < 350 ? '▼ Below normal' : '✓ Adequate';
+  document.getElementById('scoreTrend').textContent = score > 70 ? 'Good freshness condition' :
+    score > 40 ? 'Moderate condition' : 'Poor freshness condition';
+
+  // Log
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  logs.unshift({ time: timeStr, gas, moist, status });
+  if (logs.length > 20) logs.pop();
+
+  renderLog();
+
+  // Last update
+  document.getElementById('lastUpdate').textContent = 'Updated ' + timeStr;
+
+  btn.classList.remove('loading');
+}
+
+function renderLog() {
+  const list = document.getElementById('logList');
+  document.getElementById('logCount').textContent = logs.length + ' ' + (logs.length === 1 ? 'entry' : 'entries');
+
+  list.innerHTML = logs.map((l, i) => `
+    <div class="log-row" style="${i === 0 ? 'animation: fadeIn 0.4s ease;' : ''}">
+      <span class="log-time">${l.time}</span>
+      <span class="log-gas">GAS: ${l.gas}</span>
+      <span class="log-moist">MOIST: ${l.moist}</span>
+      <span class="log-status" style="color: ${statusColors[l.status]}">${l.status}</span>
+    </div>
+  `).join('');
+}
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}
+
+// Init
+triggerLoad();
+setInterval(triggerLoad, 30000);
+setInterval(updateClock, 1000);
+updateClock();
 </script>
-
 </body>
 </html>
