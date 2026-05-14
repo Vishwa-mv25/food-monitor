@@ -591,7 +591,7 @@
         <span class="card-value" id="gasVal">--</span>
         <span class="card-unit">ppm</span>
       </div>
-      <div class="card-trend" id="gasTrend">Threshold: &gt;240 = Rotten</div>
+      <div class="card-trend" id="gasTrend">Thresholds: 120 / 180 / 240</div>
       <div class="gauge-track"><div class="gauge-fill" id="gasBar"></div></div>
       <div class="gauge-markers">
         <span class="gauge-marker">0</span>
@@ -728,10 +728,10 @@ async function triggerLoad() {
     return;
   }
 
-  // Status logic
+  // Status logic — matches Arduino code exactly
   let status = 'FRESH';
-  if (gas > 240 && moist < 300) status = 'ROTTEN';
-  else if (gas > 180 || moist < 350) status = 'BAD';
+  if (gas > 240 || moist < 300) status = 'ROTTEN';
+  else if (gas > 180) status = 'BAD';
   else if (gas > 120) status = 'OK';
 
   // Score
@@ -796,8 +796,7 @@ async function triggerLoad() {
   // Trend labels
   document.getElementById('gasTrend').textContent = gas > 240 ? '▲ Critical level' :
     gas > 180 ? '▲ Elevated' : gas > 120 ? '→ Moderate' : '✓ Normal';
-  document.getElementById('moistTrend').textContent = moist < 300 ? '▼ Critically dry' :
-    moist < 350 ? '▼ Below normal' : '✓ Adequate';
+  document.getElementById('moistTrend').textContent = moist < 300 ? '▼ Critically dry → ROTTEN' : '✓ Above threshold';
   document.getElementById('scoreTrend').textContent = score > 70 ? 'Good freshness condition' :
     score > 40 ? 'Moderate condition' : 'Poor freshness condition';
 
